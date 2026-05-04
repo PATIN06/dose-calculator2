@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pediatric Dose Calculator</title>
+
+<style>
+body{font-family:Arial;background:#0f172a;color:#e5e7eb;padding:15px}
+.container{max-width:600px;margin:auto;background:#111827;padding:20px;border-radius:15px}
+h2{text-align:center}
+
+.tabs{display:flex;margin-bottom:10px}
+.tab{flex:1;padding:10px;text-align:center;cursor:pointer;background:#1f2937}
+.active{background:#22c55e;color:black;font-weight:bold}
+
+input,select,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none}
+button{font-weight:bold}
+
+.calc{background:#22c55e;color:black}
+.rev{background:#38bdf8;color:black}
+.reset{background:#ef4444;color:white}
+
+.result{background:#1f2937;padding:15px;margin-top:10px;border-radius:10px}
+.ok{color:#4ade80}
+.bad{color:#f87171}
+.warn{color:#f87171;font-size:13px}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>💊 Pediatric Dose Calculator</h2>
+
+<div class="tabs">
+<div class="tab active" onclick="showTab('calc')">🧮 คำนวณ</div>
+<div class="tab" onclick="showTab('rev')">🔁 ตรวจสอบ</div>
+</div>
+
+<!-- CALC -->
+<div id="calcTab">
+
+<input type="number" id="age" placeholder="อายุ (ปี)">
+<input type="number" id="weight" placeholder="น้ำหนัก (kg)">
+
+<select id="drug">
+<option value="">-- เลือกยา --</option>
+<option value="paracetamol">Paracetamol</option>
+<option value="ibuprofen">Ibuprofen</option>
+<option value="amoxicillin">Amoxicillin</option>
+<option value="ceftriaxone">Ceftriaxone</option>
+<option value="gentamicin">Gentamicin</option>
+<option value="vancomycin">Vancomycin</option>
+<option value="midazolam">Midazolam</option>
+<option value="diazepam">Diazepam</option>
+<option value="prednisolone">Prednisolone</option>
+<option value="salbutamol">Salbutamol</option>
+<option value="cetirizine">Cetirizine</option>
+<option value="ciprofloxacin">Ciprofloxacin</option>
+<option value="clarithromycin">Clarithromycin</option>
+<option value="coamoxiclav">Co-amoxiclav</option>
+<option value="calcium">Calcium carbonate</option>
+<option value="cpm">CPM</option>
+<option value="desloratadine">Desloratadine</option>
+<option value="dextromethorphan">Dextromethorphan</option>
+<option value="domperidone">Domperidone</option>
+<option value="iron">Ferrous</option>
+<option value="penicillin">Penicillin V</option>
+<option value="omeprazole">Omeprazole</option>
+<option value="bromhexine">Bromhexine</option>
+</select>
+
+<input type="number" id="conc" placeholder="ความเข้มข้นยา (mg/mL)">
+
+<button class="calc" onclick="calc()">คำนวณ</button>
+
+</div>
+
+<!-- REVERSE -->
+<div id="revTab" style="display:none">
+
+<input type="number" id="revWeight" placeholder="น้ำหนัก (kg)">
+
+<select id="revDrug">
+<option value="">-- เลือกยา --</option>
+<option value="paracetamol">Paracetamol</option>
+<option value="ibuprofen">Ibuprofen</option>
+<option value="amoxicillin">Amoxicillin</option>
+<option value="ceftriaxone">Ceftriaxone</option>
+<option value="gentamicin">Gentamicin</option>
+<option value="vancomycin">Vancomycin</option>
+<option value="midazolam">Midazolam</option>
+<option value="diazepam">Diazepam</option>
+<option value="prednisolone">Prednisolone</option>
+<option value="salbutamol">Salbutamol</option>
+<option value="cetirizine">Cetirizine</option>
+<option value="ciprofloxacin">Ciprofloxacin</option>
+<option value="clarithromycin">Clarithromycin</option>
+<option value="coamoxiclav">Co-amoxiclav</option>
+<option value="calcium">Calcium carbonate</option>
+<option value="cpm">CPM</option>
+<option value="desloratadine">Desloratadine</option>
+<option value="dextromethorphan">Dextromethorphan</option>
+<option value="domperidone">Domperidone</option>
+<option value="iron">Ferrous</option>
+<option value="penicillin">Penicillin V</option>
+<option value="omeprazole">Omeprazole</option>
+<option value="bromhexine">Bromhexine</option>
+</select>
+
+<input type="number" id="given" placeholder="Dose ที่ให้ (mg)">
+
+<button class="rev" onclick="reverseCheck()">ตรวจสอบ dose</button>
+
+</div>
+
+<button class="reset" onclick="resetAll()">ล้างข้อมูล</button>
+
+<div class="result" id="out"></div>
+
+</div>
+
+<script>
+
+function showTab(tab){
+document.getElementById("calcTab").style.display = (tab=="calc")?"block":"none";
+document.getElementById("revTab").style.display = (tab=="rev")?"block":"none";
+
+let tabs = document.getElementsByClassName("tab");
+tabs[0].classList.toggle("active", tab=="calc");
+tabs[1].classList.toggle("active", tab=="rev");
+}
+
+function getDrugData(d, age){
+let isNeonate = (age <= 0.08);
+let min=0,max=0,type="",maxCap=null;
+
+switch(d){
+case "paracetamol": min=10; max=15; type="dose"; maxCap=75; if(isNeonate){max=10;} break;
+case "ibuprofen": min=5; max=10; type="dose"; break;
+case "amoxicillin": min=20; max=50; type="day"; break;
+case "ceftriaxone": min=50; max=75; type="day"; break;
+case "gentamicin": min=5; max=7.5; type="day"; break;
+case "vancomycin": min=10; max=15; type="dose"; break;
+case "midazolam": min=0.05; max=0.1; type="dose"; break;
+case "diazepam": min=0.1; max=0.3; type="dose"; break;
+case "prednisolone": min=1; max=2; type="day"; break;
+case "salbutamol": min=0.1; max=0.15; type="dose"; break;
+case "cetirizine": min=0.25; max=0.25; type="day"; break;
+case "ciprofloxacin": min=10; max=15; type="dose"; break;
+case "clarithromycin": min=7.5; max=7.5; type="dose"; break;
+case "coamoxiclav": min=20; max=40; type="day"; break;
+case "calcium": min=50; max=75; type="day"; break;
+case "cpm": min=0.1; max=0.1; type="dose"; break;
+case "desloratadine": min=0.2; max=0.2; type="day"; break;
+case "dextromethorphan": min=0.5; max=0.5; type="dose"; break;
+case "domperidone": min=0.2; max=0.4; type="dose"; break;
+case "iron": min=3; max=6; type="day"; break;
+case "penicillin": min=25; max=50; type="day"; break;
+case "omeprazole": min=0.7; max=1; type="day"; break;
+case "bromhexine": min=0.5; max=1; type="day"; break;
+}
+return {min,max,type,maxCap};
+}
+
+// CALC
+function calc(){
+let w = document.getElementById("weight").value;
+let age = document.getElementById("age").value;
+let d = document.getElementById("drug").value;
+let conc = document.getElementById("conc").value;
+
+if(!w || !d){alert("กรอกข้อมูล"); return;}
+
+let data = getDrugData(d, age);
+
+let minDose = w * data.min;
+let maxDose = w * data.max;
+
+if(data.maxCap){
+let cap = w * data.maxCap;
+if(maxDose > cap){maxDose = cap;}
+}
+
+let ml="";
+if(conc){
+ml=`<br>💧 ${(minDose/conc).toFixed(2)} - ${(maxDose/conc).toFixed(2)} mL`;
+}
+
+document.getElementById("out").innerHTML =
+`➤ ${minDose.toFixed(2)} - ${maxDose.toFixed(2)} mg/${data.type}${ml}`;
+}
+
+// REVERSE
+function reverseCheck(){
+let w = document.getElementById("revWeight").value;
+let d = document.getElementById("revDrug").value;
+let given = document.getElementById("given").value;
+
+if(!w || !d || !given){alert("กรอกข้อมูล"); return;}
+
+let data = getDrugData(d, 1);
+let mgkg = given / w;
+
+let status="";
+if(mgkg < data.min){status="❌ ต่ำ";}
+else if(mgkg > data.max){status="❌ สูง";}
+else{status="✔ ปกติ";}
+
+document.getElementById("out").innerHTML =
+`➤ ${mgkg.toFixed(2)} mg/kg/${data.type}<br>${status}`;
+}
+
+// RESET
+function resetAll(){
+document.querySelectorAll("input").forEach(i=>i.value="");
+document.getElementById("drug").value="";
+document.getElementById("revDrug").value="";
+document.getElementById("out").innerHTML="";
+}
+
+</script>
+</body>
+</html>
